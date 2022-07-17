@@ -4,7 +4,6 @@ import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
@@ -19,8 +18,10 @@ public class Server {
     private final ExecutorService threadPool;
     private Socket socket;
     private final ConcurrentHashMap<String, Map<String, Handler>> handlerMap;
+    private final ParseRequest parseRequest;
 
     public Server() {
+        parseRequest = new ParseRequest();
         threadPool = Executors.newFixedThreadPool(NUMBER_THREADS);
         handlerMap = new ConcurrentHashMap<>();
     }
@@ -41,56 +42,25 @@ public class Server {
 
     public void workServer() {
 
-        try (final var in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        try (final var in = new BufferedInputStream(socket.getInputStream());
              final var out = new BufferedOutputStream(socket.getOutputStream())) {
 
-            while (true) {
-                Request request = createRequest(in, out);
-                Handler handler = handlerMap.get(request.getMethod()).get(request.getPath());
-                System.out.println("handler: " + handler);
+            Request request = parseRequest.createRequest(in, out);
+            Handler handler = handlerMap.get(request.getMethod()).get(request.getPath());
+            System.out.println("\nhandler: " + handler);
 
-                final var path = request.getPath();
-                if (!validPaths.contains(path)) {
-                    error404(out);
-                    return;
-                }
-
-                createResponse(request, out);
-                System.out.println();
+            final var path = request.getPath();
+            if (!validPaths.contains(path)) {
+                parseRequest.error404(out);
+                return;
             }
+
+            createResponse(request, out);
+            System.out.println();
 
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    public Request createRequest(BufferedReader in, BufferedOutputStream out) throws IOException {
-        var requestLine = "";
-        do {
-            requestLine = in.readLine();
-        } while (requestLine == null);
-
-        System.out.println("\n" + requestLine);
-        final var parts = requestLine.split(" ");
-
-        if (parts.length != 3) {
-            out.write(("Не верный запрос").getBytes());
-            System.out.println("Не верный запрос");
-            socket.close();
-        }
-
-        String heading;
-        Map<String, String> headers = new HashMap<>();
-        while (!(heading = in.readLine()).equals("")) {
-            var indexOf = heading.indexOf(":");
-            var nameHeader = heading.substring(0, indexOf);
-            var valueHeader = heading.substring(indexOf + 2);
-            headers.put(nameHeader, valueHeader);
-        }
-        Request request = new Request(parts[0], parts[1], headers, socket.getInputStream());
-        System.out.println("request: " + request);
-        out.flush();
-        return request;
     }
 
     public void createResponse(Request request, BufferedOutputStream out) throws IOException {
@@ -111,16 +81,6 @@ public class Server {
         out.write(("HTTP/1.1 200 OK\r\n" + "Content-Type: " + mimeType + "\r\n" + "Content-Length: " + length
                 + "\r\n" + "Connection: close\r\n" + "\r\n").getBytes());
         Files.copy(filePath, out);
-        out.flush();
-    }
-
-    public void error404(BufferedOutputStream out) throws IOException {
-        out.write((
-                "HTTP/1.1 404 Not Found\r\n" +
-                        "Content-Length: 0\r\n" +
-                        "Connection: close\r\n" +
-                        "\r\n"
-        ).getBytes());
         out.flush();
     }
 

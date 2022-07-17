@@ -1,18 +1,25 @@
-import java.io.InputStream;
-import java.util.Map;
+import org.apache.http.NameValuePair;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class Request {
 
     private final String method;
     private final String path;
-    private final Map<String, String> headers;
-    private final InputStream body;
+    private final List<String> headers;
+    private final String body;
+    private List<NameValuePair> postParams;
 
-    public Request(String method, String path, Map<String, String> headers, InputStream body) {
+    public Request(String method, String path, List<String> headers, String body) {
         this.method = method;
         this.path = path;
         this.headers = headers;
         this.body = body;
+    }
+
+    public void setPostParams(List<NameValuePair> params) {
+        this.postParams = params;
     }
 
     public String getMethod() {
@@ -23,19 +30,33 @@ public class Request {
         return path;
     }
 
-    public Map<String, String> getHeaders() {return headers; }
+    public List<String> getHeaders() {
+        return headers;
+    }
 
-    public InputStream getBody() {
+    public String getBody() {
         return body;
+    }
+
+    public List<NameValuePair> getPostParams() {
+        return postParams;
+    }
+
+    public String getPostParam(String postParam) {
+        return postParams.stream()
+                .filter(p -> p.getName().equals(postParam))
+                .map(NameValuePair::getValue)
+                .collect(Collectors.joining(", "));
     }
 
     @Override
     public String toString() {
         return "Request{" +
-                "method='" + method + '\'' +
-                ", path='" + path + '\'' +
-                ", headers=" + headers +
-                ", body='" + body + '\'' +
+                "\n method='" + method + '\'' +
+                "\n path='" + path + '\'' +
+                "\n headers=" + headers +
+                "\n body='" + body + '\'' +
+                "\n queryParams=" + postParams +
                 '}';
     }
 }
