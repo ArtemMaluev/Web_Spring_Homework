@@ -9,7 +9,7 @@ public class Request {
     private final String path;
     private final List<String> headers;
     private final String body;
-    private List<NameValuePair> queryParams;
+    private List<NameValuePair> postParams;
 
     public Request(String method, String path, List<String> headers, String body) {
         this.method = method;
@@ -18,8 +18,8 @@ public class Request {
         this.body = body;
     }
 
-    public void setQueryParams(List<NameValuePair> params) {
-        this.queryParams = params;
+    public void setPostParams(List<NameValuePair> params) {
+        this.postParams = params;
     }
 
     public String getMethod() {
@@ -30,19 +30,21 @@ public class Request {
         return path;
     }
 
-    public List<String> getHeaders() {return headers; }
+    public List<String> getHeaders() {
+        return headers;
+    }
 
     public String getBody() {
         return body;
     }
 
-    public List<NameValuePair> getQueryParams() {
-        return queryParams;
+    public List<NameValuePair> getPostParams() {
+        return postParams;
     }
 
-    public String getQueryParam(String param) {
-        return queryParams.stream()
-                .filter(p -> p.getName().equals(param))
+    public String getPostParam(String postParam) {
+        return postParams.stream()
+                .filter(p -> p.getName().equals(postParam))
                 .map(NameValuePair::getValue)
                 .collect(Collectors.joining(", "));
     }
@@ -54,7 +56,7 @@ public class Request {
                 "\n path='" + path + '\'' +
                 "\n headers=" + headers +
                 "\n body='" + body + '\'' +
-                "\n queryParams=" + queryParams +
+                "\n queryParams=" + postParams +
                 '}';
     }
 }

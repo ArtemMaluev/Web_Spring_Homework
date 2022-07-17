@@ -45,23 +45,9 @@ public class Server {
         try (final var in = new BufferedInputStream(socket.getInputStream());
              final var out = new BufferedOutputStream(socket.getOutputStream())) {
 
-//            while (true) {
-//                Request request = parseRequest.createRequest(in, out);
-//                Handler handler = handlerMap.get(request.getMethod()).get(request.getPath());
-//                System.out.println("handler: " + handler);
-//
-//                final var path = request.getPath();
-//                if (!validPaths.contains(path)) {
-//                    parseRequest.error404(out);
-//                    return;
-//                }
-//
-//                createResponse(request, out);
-//                System.out.println();
-//            }
             Request request = parseRequest.createRequest(in, out);
             Handler handler = handlerMap.get(request.getMethod()).get(request.getPath());
-            System.out.println("handler: " + handler);
+            System.out.println("\nhandler: " + handler);
 
             final var path = request.getPath();
             if (!validPaths.contains(path)) {
@@ -69,7 +55,6 @@ public class Server {
                 return;
             }
 
-            handler.handle(request, out);
             createResponse(request, out);
             System.out.println();
 
