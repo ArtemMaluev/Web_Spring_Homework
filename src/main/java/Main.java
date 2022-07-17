@@ -19,7 +19,7 @@ public class Main {
             }
         });
 
-        server.addHandler("POST", "/resources.html", new Handler() {
+        server.addHandler("POST", "/spring.svg", new Handler() {
             public void handle(Request request, BufferedOutputStream responseStream) {
                 try {
                     server.createResponse(request, responseStream);
